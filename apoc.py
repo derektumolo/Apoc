@@ -80,6 +80,14 @@ class Map(pygame.sprite.Sprite):
 				column.append(Tile(random.choice(TileTypesList),x,y))
 			self.tiles.append(column)
 			column = []
+			
+	def draw(self, surface):
+		for row in self.tiles:
+			for tile in row:
+				surface.blit(bgTile, tile.rect)
+				#TODO - fix this so its at least somewhat efficient
+				surface.blit(tile.image,tile.rect)
+		
 
 class Tile(pygame.sprite.Sprite):
 	# an individual tile in the map
@@ -194,22 +202,27 @@ class Unit(pygame.sprite.Sprite):
 		self.y = y
 		self.rect = (x*32,y*32,32,32)
 		
+		self.selected = False
+		
 	def move(self,x,y):
 		self.rect = (x*32, y*32, 32,32)
 		self.x = x
 		self.y = y
+		
+		self.Highlight.move(x,y) # move the highlight with the unit
 		#later, we will check distances and things
+		
+	# not sure if I will actually need thesew
+	def select(self):
+		self.selected = True
+		
+	def deselect(self):
+		self.selected = False
 		
 	def update(self):
 		pygame.event.pump()
 
-	def moveup(self):
-		self.movepos[1] = self.movepos[1] - (self.speed)
-		self.state = "moveup"
 
-	def movedown(self):
-		self.movepos[1] = self.movepos[1] + (self.speed)
-		self.state = "movedown"
 		
 class Player:
 	# a class that will be superclassed or subclassed to handle AI as well
@@ -218,6 +231,25 @@ class Player:
 	def __init__(self):
 		self.selection = [] # the selected unit
 		
+class Selection(pygame.sprite.Sprite):
+	# the idea is that we move the selection window, rather than attempting to do the highlight on the unit.
+	# probably will need to change this later.
+	
+	def __init__(self, side, x=0, y=0):
+		pygame.sprite.Sprite.__init__(self)
+		
+		self.image = ss.image_at((0,0,32,32), -1)
+		screen = pygame.display.get_surface()
+#		self.speed = 10
+		self.owner = []
+		self.x = x
+		self.y = y
+		self.rect = (x*32,y*32,32,32)
+		
+	def move(self,x,y):
+		self.rect = (x*32, y*32, 34,34)
+		self.x = x
+		self.y = y
 
 # Turns
 	# user will have an action to end their turn
@@ -327,11 +359,7 @@ def main():
 					
 
 		
-		for row in map.tiles:
-			for tile in row:
-				screen.blit(bgTile, tile.rect)
-				#TODO - fix this so its at least somewhat efficient
-				screen.blit(tile.image,tile.rect)
+		map.draw(screen)
 
 		screen.blit(background, player1.rect, player1.rect)
 		playersprites.update()

@@ -1,7 +1,18 @@
 TODO
 
-- two units, select, then click to move
-- select should be indicated with a highlight
+- chrome, part 1 - put some text on that right hand side
+- chrome part 2 - put unit data on the right hand panel, but only when selected
+- chrome part 3 - put tile data when a unit is not selected
+- chrome the 4th - add a turn button, and print when it is clicked
+
+
+- cleanup - don't let units move outside the map
+
+- feature - make the map scrollable
+
+- 
+X two units, select, then click to move
+X select should be indicated with a highlight
 X get a unit on the screen, over a tile
 X move the unit to another tile
 X render tiles

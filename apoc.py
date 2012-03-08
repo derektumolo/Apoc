@@ -61,6 +61,8 @@ class Map(pygame.sprite.Sprite):
 				#TODO - fix this so its at least somewhat efficient
 				surface.blit(tile.image,tile.rect)
 		
+class Chrome(pygame.sprite.Sprite):
+	pass
 
 class Tile(pygame.sprite.Sprite):
 	# an individual tile in the map
@@ -82,7 +84,7 @@ class Tile(pygame.sprite.Sprite):
 		self.area = screen.get_rect()
 		self.tileType = tileType
 		self.image = tileType.image
-		self.rect = (x*32, y*32, 32, 32)
+		self.rect = pygame.Rect(x*32, y*32, 32, 32)
 	
 class TileType:
 	# Name
@@ -139,8 +141,9 @@ class Item:
 		self.type = 0
 
 class UnitGroup(pygame.sprite.Group):
-	def __init__():
-		pass
+	# sort of like a unit factory? 
+	def __init__(self):
+		pygame.sprite.Group.__init__(self)
 
 class Unit(pygame.sprite.Sprite):
 	# basically, a sprite.  Anything that is mobile.
@@ -167,7 +170,7 @@ class Unit(pygame.sprite.Sprite):
 	
 	# loyalty?
 
-	def __init__(self, side, x=0, y=0):
+	def __init__(self, x=0, y=0, name="Smiley"):
 		pygame.sprite.Sprite.__init__(self)
 		ss = spritesheet.spritesheet('img/asprite.bmp')
 		self.image = ss.image_at((0,0,32,32), -1)
@@ -177,7 +180,8 @@ class Unit(pygame.sprite.Sprite):
 		self.owner = []
 		self.x = x
 		self.y = y
-		self.rect = (x*32,y*32,32,32)
+		self.name = name
+		self.rect = pygame.Rect(x*32,y*32,32,32)
 		
 		self.selected = False
 		
@@ -185,7 +189,7 @@ class Unit(pygame.sprite.Sprite):
 		
 	def move(self,x,y):
 		if self.selected:
-			self.rect = (x*32, y*32, 32,32)
+			self.rect = pygame.Rect(x*32, y*32, 32,32)
 			self.x = x
 			self.y = y
 
@@ -219,32 +223,35 @@ class Highlight(pygame.sprite.Sprite):
 	def __init__(self, x=0, y=0):
 		pygame.sprite.Sprite.__init__(self)
 		
-		self.image = ss.image_at((0,0,32,32), -1)
-		screen = pygame.display.get_surface()
-#		self.speed = 10
+		self.image = pygame.surface.Surface((38, 38))
+		self.image.fill((54, 47, 200))
+		
 		self.owner = []
 		self.x = x
 		self.y = y
-		self.rect = (x*32,y*32,34,34)
+		self.rect = pygame.Rect(x*32-3,y*32-3,38,38)
 		
 	def move(self,x,y):
-		self.rect = (x*32, y*32, 34,34)
+		self.rect = pygame.Rect(x*32-3, y*32-3, 38,38) #prob inefficient
 		self.x = x
 		self.y = y
 		
 	def draw(self, surface):
-		print "drawing highlight"
+		surface.blit(self.image, self.rect)
 
 class Player:
 	# a class that will be superclassed or subclassed to handle AI as well
 	# for now it holds some game state type data that we don't really have a place fore
 
 	def __init__(self):
-		self.selection = [] # the selected unit
+		self.selection = None # the selected unit
 		self.highlight = Highlight(0,0)
 		
-	def select(unit):
+	def select(self,unit):
+		if self.selection:
+			self.selection.deselect
 		self.selection = unit
+		self.selection.select()
 # Turns
 	# user will have an action to end their turn
 	# this iterates through the list of units, and resets their AP to max
@@ -308,7 +315,8 @@ def main():
 	# Initialise units
 	global units
 	units = UnitGroup() 
-	units.add(Unit("left"))
+	units.add(Unit())
+	units.add(Unit(2,4))
 	
 	global player
 	player = Player()
@@ -344,20 +352,33 @@ def main():
 				if event.button == 1:
 					# detect collision with a unit, and select it, first deselecting the current
 					player.highlight.move(x,y)
-					if 
-					elif player.selection:
-						if player.selection.x = x and player.selection.y = y:
-							# clicking a unit again deselects that unit
+					#print player.highlight.rect
+					newselect = pygame.sprite.spritecollide(player.highlight, units, False)
+					print newselect
+					if newselect != []:
+						# we have clicked on a unit.  
+						if newselect[0] == player.selection:
+							# if we click on it again, we deselect
 							player.selection.deselect()
 							player.selection = []
 						else:
-							player.selection.move((event.pos[0]/32), (event.pos[1]/32))
-		
+							# drop the current one, and select a new one.
+							player.select(newselect[0])
+							player.selection.highligh = player.highlight
+					elif player.selection:
+						player.selection.move(x, y)
+
 		map.draw(screen)
 
-		screen.blit(background, player1.rect, player1.rect)
-		playersprites.update()
-		playersprites.draw(screen)
+		# prob wrong
+		player.highlight.draw(screen)
+				
+		for unit in units:
+			screen.blit(background, unit.rect, unit.rect)
+		unitsprites.update()
+		unitsprites.draw(screen)
+		
+
 					
 		pygame.display.flip()
 

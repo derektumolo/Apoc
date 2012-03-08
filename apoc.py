@@ -138,6 +138,10 @@ class Item:
 	def __init__():
 		self.type = 0
 
+class UnitGroup(pygame.sprite.Group):
+	def __init__():
+		pass
+
 class Unit(pygame.sprite.Sprite):
 	# basically, a sprite.  Anything that is mobile.
 	
@@ -303,9 +307,8 @@ def main():
 	
 	# Initialise units
 	global units
-	unit = UnitGroup() 
-	global unit1
-	unit1 = Unit("left")
+	units = UnitGroup() 
+	units.add(Unit("left"))
 	
 	global player
 	player = Player()
@@ -314,7 +317,7 @@ def main():
 	map = Map(10) # 10 is the size, in tiles
 	
 	# Initialise sprites
-	unitsprites = pygame.sprite.RenderPlain((unit1))
+	unitsprites = pygame.sprite.RenderPlain((units))
 	mapsprites = pygame.sprite.RenderPlain(map)
 	
 	# Blit everything to the screen

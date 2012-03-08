@@ -16,33 +16,6 @@ except ImportError, err:
 	print "couldn't load module. %s" % (err)
 	sys.exit(2)
 
-# file resource handling will go here
-# resources will be sprites for the various tiles and buildings, units
-# probably will also want images for the various resources
-# orders will need icons
-# chrome at some point
-# this will probably not be needed, and instead extend the spritesheet code.
-def load_img(name, colorkey = None):
-	""" Load image and return image object"""
-	fullname = os.path.join('img', name)
-	try:
-	        image = pygame.image.load(fullname)
-	        if image.get_alpha is None:
-	                image = image.convert()
-	        else:
-	                image = image.convert_alpha()
-			if colorkey is not None:
-				if colorkey is -1:
-
-					colorkey = image.get_at((0,0))
-					print "yep, transparent it up"
-					print colorkey
-				image.set_colorkey(colorkey, pygame.RLEACCEL)
-	except pygame.error, message:
-	        print 'Cannot load image:', fullname
-	        raise SystemExit, message
-	return image, image.get_rect()
-
 # fancy functional programming stuff to build a map.  deprecated
 def mapRow(x):
 	return map(pickTileType,x)
@@ -204,38 +177,42 @@ class Unit(pygame.sprite.Sprite):
 		
 		self.selected = False
 		
+		self.highlight = []
+		
 	def move(self,x,y):
-		self.rect = (x*32, y*32, 32,32)
-		self.x = x
-		self.y = y
+		if self.selected:
+			self.rect = (x*32, y*32, 32,32)
+			self.x = x
+			self.y = y
+
+			self.highlight.move(x,y) # move the highlight with the unit
+			#later, we will check distances and things
+		else:
+			print "ERROR - moving unselected unit."
+			# TODO - make this real error handling
 		
-		self.Highlight.move(x,y) # move the highlight with the unit
-		#later, we will check distances and things
-		
-	# not sure if I will actually need thesew
+	# not sure if I will actually need these
 	def select(self):
 		self.selected = True
+		self.highlight = Highlight(self.x, self.y)
 		
 	def deselect(self):
 		self.selected = False
+		self.highlight = []
 		
 	def update(self):
 		pygame.event.pump()
-
-
 		
-class Player:
-	# a class that will be superclassed or subclassed to handle AI as well
-	# for now it holds some game state type data that we don't really have a place fore
-	
-	def __init__(self):
-		self.selection = [] # the selected unit
+	def draw(self, surface):
+		print "drawing units"
+		if self.selected:
+			self.highlight.draw(surface)
 		
-class Selection(pygame.sprite.Sprite):
+class Highlight(pygame.sprite.Sprite):
 	# the idea is that we move the selection window, rather than attempting to do the highlight on the unit.
 	# probably will need to change this later.
 	
-	def __init__(self, side, x=0, y=0):
+	def __init__(self, x=0, y=0):
 		pygame.sprite.Sprite.__init__(self)
 		
 		self.image = ss.image_at((0,0,32,32), -1)
@@ -244,13 +221,26 @@ class Selection(pygame.sprite.Sprite):
 		self.owner = []
 		self.x = x
 		self.y = y
-		self.rect = (x*32,y*32,32,32)
+		self.rect = (x*32,y*32,34,34)
 		
 	def move(self,x,y):
 		self.rect = (x*32, y*32, 34,34)
 		self.x = x
 		self.y = y
+		
+	def draw(self, surface):
+		print "drawing highlight"
 
+class Player:
+	# a class that will be superclassed or subclassed to handle AI as well
+	# for now it holds some game state type data that we don't really have a place fore
+
+	def __init__(self):
+		self.selection = [] # the selected unit
+		self.highlight = Highlight(0,0)
+		
+	def select(unit):
+		self.selection = unit
 # Turns
 	# user will have an action to end their turn
 	# this iterates through the list of units, and resets their AP to max
@@ -311,15 +301,20 @@ def main():
 	background = background.convert()
 	background.fill((0, 0, 0))
 	
-	# Initialise players
-	global player1
-	player1 = Unit("left")
+	# Initialise units
+	global units
+	unit = UnitGroup() 
+	global unit1
+	unit1 = Unit("left")
+	
+	global player
+	player = Player()
 
 	global map
 	map = Map(10) # 10 is the size, in tiles
 	
 	# Initialise sprites
-	playersprites = pygame.sprite.RenderPlain((player1))
+	unitsprites = pygame.sprite.RenderPlain((unit1))
 	mapsprites = pygame.sprite.RenderPlain(map)
 	
 	# Blit everything to the screen
@@ -339,25 +334,21 @@ def main():
 				return
 			elif event.type == KEYDOWN:
 				if event.key == K_a:
-					player1.moveup()
-				if event.key == K_z:
-					player1.movedown()
-				if event.key == K_UP:
-					player1.moveup()
-				if event.key == K_DOWN:
-					player1.movedown()
-			elif event.type == KEYUP:
-				if event.key == K_a or event.key == K_z:
-					player1.movepos = [0,0]
-					player1.state = "still"
-				if event.key == K_UP or event.key == K_DOWN:
-					player1.movepos = [0,0]
-					player1.state = "still"
+					pass
 			elif event.type == MOUSEBUTTONDOWN:
+				x = event.pos[0]/32
+				y = event.pos[1]/32
 				if event.button == 1:
-					player1.move((event.pos[0]/32), (event.pos[1]/32))
-					
-
+					# detect collision with a unit, and select it, first deselecting the current
+					player.highlight.move(x,y)
+					if 
+					elif player.selection:
+						if player.selection.x = x and player.selection.y = y:
+							# clicking a unit again deselects that unit
+							player.selection.deselect()
+							player.selection = []
+						else:
+							player.selection.move((event.pos[0]/32), (event.pos[1]/32))
 		
 		map.draw(screen)
 

@@ -11,92 +11,17 @@ try:
 	from socket import *
 	from pygame.locals import *
 	import spritesheet	
+
+	# trying to separate some of this stuff out so its not one giant file
+	import chrome
+	import maps
+	import units
 	
 except ImportError, err:
 	print "couldn't load module. %s" % (err)
 	sys.exit(2)
-
-# fancy functional programming stuff to build a map.  deprecated
-def mapRow(x):
-	return map(pickTileType,x)
-def pickTileType(x):
-	return Tile(random.choice(TileTypesList))
-	
-	
-class Map(pygame.sprite.Sprite):
-	# TODO
-	# params for building a map
-	# more complicated distribution of tile types
-	
-	# render function, which sequentially calls tile.render for each tile?
-	# update function?
-	
-	def __init__(self, size):
-		pygame.sprite.Sprite.__init__(self)
-		screen = pygame.display.get_surface()
-		self.area = screen.get_rect()
-		self.size = size
-		self.rect = (size*32, size*32)
-		self.generate()
-
-	def generate(self):
-		# this is the functional stuff.  I couldnt get it to build x,y positions as it created the tiles
-		# and it was less readable.
-#		array = [x[:] for x in [[0]*self.size]*self.size]
-#		self.tiles = map(mapRow, array)
 		
-		self.tiles = []
-		column = []
-		
-		for x in range(self.size):
-			for y in range(self.size):
-				column.append(Tile(random.choice(TileTypesList),x,y))
-			self.tiles.append(column)
-			column = []
-			
-	def draw(self, surface):
-		for row in self.tiles:
-			for tile in row:
-				surface.blit(bgTile, tile.rect)
-				#TODO - fix this so its at least somewhat efficient
-				surface.blit(tile.image,tile.rect)
-		
-class Chrome(pygame.sprite.Sprite):
-	pass
-
-class Tile(pygame.sprite.Sprite):
-	# an individual tile in the map
-	# x,y
-	
-	# resources stored
-	
-	# buildings present? this might be subsumed in tile type
-	
-	# units present will be stored at the unit level? or both? might be efficient to have both.
-	
-	# generation function for map can call generate on each tile? then we can get some game of life
-	# complexity type stuff where it checks the neighboring tiles.
-	
-	# tile.work()? or unit.work(tile)? i think unit.  
-	def __init__(self, tileType, x, y):
-		pygame.sprite.Sprite.__init__(self)
-		screen = pygame.display.get_surface()
-		self.area = screen.get_rect()
-		self.tileType = tileType
-		self.image = tileType.image
-		self.rect = pygame.Rect(x*32, y*32, 32, 32)
-	
-class TileType:
-	# Name
-	# Desc
-	# work types avail. - theres another class - a dictionary of flags? this is like a flywheel?
-	# we want to be able to easily add a new work type without hacking apart all the tile code
-	
-	def __init__(self, name, workAvail, image):
-		self.name = name
-		self.WorkAvail = workAvail
-		self.image = image
-	
+# this stuff is staying in here until i actually implement it
 class Work:
 	# these should probably be in a dictionary, with name as the key
 	def __init__(Name, APCost, ResourceCosts, Products):
@@ -139,83 +64,10 @@ class Item:
 	
 	def __init__():
 		self.type = 0
-
-class UnitGroup(pygame.sprite.Group):
-	# sort of like a unit factory? 
-	def __init__(self):
-		pygame.sprite.Group.__init__(self)
-
-class Unit(pygame.sprite.Sprite):
-	# basically, a sprite.  Anything that is mobile.
-	
-	# type - this will be where we get the image path from, and some defaults for the init fctn
-	
-	# APAvail
-	# MaxAP
-	
-	# current orders? I think for now, the order is executed as the player requests it
-	# so no rollback, but all that is done at EOT is to reset action points, and run the NPC orders
-	
-	# hp?
-	
-	# skills = skills() - i think we'll have a different class for the skills? maybe a map/hash
-	# then we can do things like Bob.skills.salvage++
-	
-	# stats - like skills above, there are several of these attributes, which can be adjusted up or down
-
-	# equipment - just a resource, attached to a particular body part.
-	# inventory
-
-	# contamination?
-	
-	# loyalty?
-
-	def __init__(self, x=0, y=0, name="Smiley"):
-		pygame.sprite.Sprite.__init__(self)
-		ss = spritesheet.spritesheet('img/asprite.bmp')
-		self.image = ss.image_at((0,0,32,32), -1)
-		screen = pygame.display.get_surface()
-		self.area = screen.get_rect()
-#		self.speed = 10
-		self.owner = []
-		self.x = x
-		self.y = y
-		self.name = name
-		self.rect = pygame.Rect(x*32,y*32,32,32)
 		
-		self.selected = False
 		
-		self.highlight = []
-		
-	def move(self,x,y):
-		if self.selected:
-			self.rect = pygame.Rect(x*32, y*32, 32,32)
-			self.x = x
-			self.y = y
-
-			self.highlight.move(x,y) # move the highlight with the unit
-			#later, we will check distances and things
-		else:
-			print "ERROR - moving unselected unit."
-			# TODO - make this real error handling
-		
-	# not sure if I will actually need these
-	def select(self):
-		self.selected = True
-		self.highlight = Highlight(self.x, self.y)
-		
-	def deselect(self):
-		self.selected = False
-		self.highlight = []
-		
-	def update(self):
-		pygame.event.pump()
-		
-	def draw(self, surface):
-		print "drawing units"
-		if self.selected:
-			self.highlight.draw(surface)
-		
+# leaving these here until I figure out where I want to keep them
+# i don't think this is a terribly good implementation		
 class Highlight(pygame.sprite.Sprite):
 	# the idea is that we move the selection window, rather than attempting to do the highlight on the unit.
 	# probably will need to change this later.
@@ -277,35 +129,11 @@ class Player:
 	# overall details
 	# main menu button
 	
-# loading up the data after the classes are all set up
-
-# refactor this so its part of the ss class? maybe?
-def tileImg(ss,x,y):
-	return ss.image_at((x*32, y*32, 32, 32),(0,0,0))
-
-def loadTiles():
-	ss = spritesheet.spritesheet('img/tiles.png')
-	TileTypesData = [
-		("wasteland", ["clean", "salvage", "housing", "factory"], tileImg(ss,4,9)),
-		("plains", ["farm", "housing", "factory"],tileImg(ss,1,1)),
-		("lake", ["fish", "water"],tileImg(ss,3,7)),
-		("forest", ["chop", "hunt"],tileImg(ss,6,1))
-	]
-	
-	global bgTile
-	bgTile = tileImg(ss,4,9)
-
-	global TileTypesList 
-	TileTypesList = [TileType(name, workAvailKeys, image) for name, workAvailKeys, image in TileTypesData]
-	
 def main():
 	# Initialise screen
 	pygame.init()
 	screen = pygame.display.set_mode((640, 480))
 	pygame.display.set_caption('Apocalypse')
-	
-	# load up tiles, later, more initialization and data stuff.
-	loadTiles()
 	
 	# Fill background (probably deprecated?)
 	background = pygame.Surface(screen.get_size())
@@ -313,19 +141,19 @@ def main():
 	background.fill((0, 0, 0))
 	
 	# Initialise units
-	global units
-	units = UnitGroup() 
-	units.add(Unit())
-	units.add(Unit(2,4))
+	global ug
+	ug = units.UnitGroup() 
+	ug.add(units.Unit())
+	ug.add(units.Unit(2,4))
 	
 	global player
 	player = Player()
 
 	global map
-	map = Map(10) # 10 is the size, in tiles
+	map = maps.Map(10) # 10 is the size, in tiles
 	
 	# Initialise sprites
-	unitsprites = pygame.sprite.RenderPlain((units))
+	unitsprites = pygame.sprite.RenderPlain((ug))
 	mapsprites = pygame.sprite.RenderPlain(map)
 	
 	# Blit everything to the screen
@@ -353,7 +181,7 @@ def main():
 					# detect collision with a unit, and select it, first deselecting the current
 					player.highlight.move(x,y)
 					#print player.highlight.rect
-					newselect = pygame.sprite.spritecollide(player.highlight, units, False)
+					newselect = pygame.sprite.spritecollide(player.highlight, ug, False)
 					print newselect
 					if newselect != []:
 						# we have clicked on a unit.  
@@ -364,7 +192,7 @@ def main():
 						else:
 							# drop the current one, and select a new one.
 							player.select(newselect[0])
-							player.selection.highligh = player.highlight
+							#player.selection.highlight = player.highlight
 					elif player.selection:
 						player.selection.move(x, y)
 
@@ -373,8 +201,8 @@ def main():
 		# prob wrong
 		player.highlight.draw(screen)
 				
-		for unit in units:
-			screen.blit(background, unit.rect, unit.rect)
+		for u in ug:
+			screen.blit(background, u.rect, u.rect)
 		unitsprites.update()
 		unitsprites.draw(screen)
 		

@@ -75,16 +75,18 @@ class Highlight(pygame.sprite.Sprite):
 	def __init__(self, x=0, y=0):
 		pygame.sprite.Sprite.__init__(self)
 		
-		self.image = pygame.surface.Surface((38, 38))
+		self.image = pygame.surface.Surface((35, 35))
 		self.image.fill((54, 47, 200))
 		
 		self.owner = []
 		self.x = x
 		self.y = y
-		self.rect = pygame.Rect(x*32-3,y*32-3,38,38)
+		self.rect = pygame.Rect(x*32,y*32,32,32)
+		self.rect2 = pygame.Rect(x*32-3,y*32-3,38,38)
 		
 	def move(self,x,y):
-		self.rect = pygame.Rect(x*32-3, y*32-3, 38,38) #prob inefficient
+		self.rect2 = pygame.Rect(x*32-3, y*32-3, 38,38) #prob inefficient
+		self.rect = pygame.Rect(x*32,y*32,32,32)
 		self.x = x
 		self.y = y
 		
@@ -144,7 +146,7 @@ def main():
 	global ug
 	ug = units.UnitGroup() 
 	ug.add(units.Unit())
-	ug.add(units.Unit(2,4))
+	ug.add(units.Unit(2,4,"frowns"))
 	
 	global player
 	player = Player()
@@ -156,6 +158,8 @@ def main():
 	unitsprites = pygame.sprite.RenderPlain((ug))
 	mapsprites = pygame.sprite.RenderPlain(map)
 	
+	gamechrome = chrome.Chrome()
+	
 	# Blit everything to the screen
 	screen.blit(background, (0, 0))
 	pygame.display.flip()
@@ -163,7 +167,9 @@ def main():
 	# Initialise clock
 	clock = pygame.time.Clock()
 
-	while 1:
+	running = True
+
+	while running:
 	# Make sure game doesn't run at more than 60 frames per second
 		clock.tick(60)
 
@@ -172,10 +178,10 @@ def main():
 			if event.type == QUIT:
 				return
 			elif event.type == KEYDOWN:
-				if event.key == K_a:
-					pass
+				if event.key == K_ESCAPE:
+					running = False
 			elif event.type == MOUSEBUTTONDOWN:
-				x = event.pos[0]/32
+				x = event.pos[0]/32	
 				y = event.pos[1]/32
 				if event.button == 1:
 					# detect collision with a unit, and select it, first deselecting the current
@@ -204,9 +210,10 @@ def main():
 		for u in ug:
 			screen.blit(background, u.rect, u.rect)
 		unitsprites.update()
+		
 		unitsprites.draw(screen)
 		
-
+		gamechrome.draw(screen, player)
 					
 		pygame.display.flip()
 
